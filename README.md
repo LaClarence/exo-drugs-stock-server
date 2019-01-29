@@ -5,6 +5,29 @@
 - npm must be available.
 - node.js must be installed.
 
+## Installing MongoDB
+
+Entrez les commandes suivantes, une par une, dans le terminal :
+
+```bash
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)" # Installera le logiciel https://brew.sh/
+brew update
+brew install mongodb
+sudo mkdir -p /data/db
+sudo chown -R "$USER":staff /data/db
+brew services start mongo
+```
+
+[MongoDB official install](https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/)
+
+[How to run MongoDB on macOS using Homebrew](https://www.code2bits.com/how-to-run-mongodb-on-macos/)
+
+### MongoDB Compass
+
+MongoDB Compass is the ultimate GUI to manage MongoDB databases.
+
+[Install MongoDB Compass](https://www.mongodb.com/products/compass)
+
 ## Quick Start
 
 ```bash
