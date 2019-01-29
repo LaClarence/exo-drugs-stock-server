@@ -87,6 +87,52 @@ app.post("/remove", async (req, res) => {
   }
 });
 
+// Get quantity drugs stock
+app.get("/quantity", async (req, res) => {
+  const drug = await DrugModel.findOne({ name: req.query.name });
+  if (drug) {
+    return res.json(drug);
+  }
+  return res
+    .status(204)
+    .json({ message: `No drug found with name :"${req.query.name}" ` });
+});
+
+// Change name of a drug
+app.post("/rename", async (req, res) => {
+  try {
+    const drug = await DrugModel.findById(req.body.id);
+    if (drug) {
+      drug.name = req.body.name;
+      await drug.save();
+      return res.status(202).json({ message: "Name updated" });
+    } else {
+      return res
+        .status(204)
+        .json({ message: `No drug found with id :"${req.body.id}" ` });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
+// Delete a drug from stock
+app.post("/delete", async (req, res) => {
+  try {
+    const drug = await DrugModel.findById(req.body.id);
+    if (drug) {
+      drug.remove();
+      return res.json({ message: "Drug is deleted" });
+    } else {
+      return res
+        .status(204)
+        .json({ message: `No drug found with id :"${req.body.id}" ` });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: error.message });
+  }
+});
+
 // All others routes
 app.all("*", function(req, res) {
   sendError(res, "Page not found!", 404);
