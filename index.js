@@ -59,7 +59,7 @@ app.get("/", async (req, res) => {
   res.json(stock);
 });
 
-// Increase stock of the stock
+// Increase quantity of a drug in stock
 app.post("/add", async (req, res) => {
   try {
     const drug = await DrugModel.findById(req.body.id);
@@ -78,7 +78,7 @@ app.post("/add", async (req, res) => {
   }
 });
 
-// Remove from stock
+// Remove from stock a drug by its drug id
 app.post("/remove", async (req, res) => {
   try {
     const drug = await DrugModel.findById(req.body.id);
@@ -110,7 +110,7 @@ app.post("/remove", async (req, res) => {
   }
 });
 
-// Get quantity drugs stock
+// Get drug's quantity in stock
 app.get("/quantity", async (req, res) => {
   const drug = await DrugModel.findOne({ name: req.query.name });
   if (drug) {
