@@ -17,10 +17,17 @@ const DrugModel = mongoose.model("Drug", {
   quantity: Number
 });
 
+const TraceModel = mongoose.model("Trace", {
+  timeStamp: Number,
+  drugId: String,
+  command: String,
+  changeInfo: String
+});
+
 // Add a new drug to stock
 app.post("/create", async (req, res) => {
-  const drug = await DrugModel.find({ name: req.body.name });
-  if (drug) {
+  const drugDb = await DrugModel.findOne({ name: req.body.name });
+  if (drugDb) {
     return res.status(400).json({
       error: {
         message: "Drug already exists"
@@ -33,8 +40,17 @@ app.post("/create", async (req, res) => {
     quantity: req.body.quantity
   });
 
-  const drugAdded = await newDrug.save();
-  res.status(201).json(drugAdded);
+  const drug = await newDrug.save();
+
+  let drugResponse = {};
+  drugResponse.id = drug.id;
+  drugResponse.name = drug.name;
+  drugResponse.quantity = drug.quantity;
+
+  logEvent(drug.id, "CREATE", JSON.stringify(req.body));
+
+  //JSON.stringify(drugAdded, ['id','name','quantity']);
+  res.status(201).json(drugResponse);
 });
 
 // Drugs stock
@@ -50,6 +66,7 @@ app.post("/add", async (req, res) => {
     if (drug) {
       drug.quantity += req.body.quantity;
       await drug.save();
+      logEvent(drug.id, "ADD QTY", `Add ${req.body.quantity} of ${drug.name}`);
       return res.status(202).json({ message: "Quantity updated" });
     } else {
       return res
@@ -75,6 +92,12 @@ app.post("/remove", async (req, res) => {
       } else {
         drug.quantity -= req.body.quantity;
         drug.save();
+        logEvent(
+          drug.id,
+          "REMOVE QTY",
+          `Remove ${req.body.quantity} of ${drug.name}`
+        );
+
         return res.json({ message: "Quantity removed" });
       }
     } else {
@@ -103,8 +126,14 @@ app.post("/rename", async (req, res) => {
   try {
     const drug = await DrugModel.findById(req.body.id);
     if (drug) {
+      const previousName = drug.name;
       drug.name = req.body.name;
       await drug.save();
+      logEvent(
+        drug.id,
+        "RENAME",
+        `Rename drug ${previousName} by ${drug.name}`
+      );
       return res.status(202).json({ message: "Name updated" });
     } else {
       return res
@@ -121,7 +150,11 @@ app.post("/delete", async (req, res) => {
   try {
     const drug = await DrugModel.findById(req.body.id);
     if (drug) {
+      const idDeleted = drug._id;
+      const nameDeleted = drug.name;
       drug.remove();
+      logEvent(idDeleted, "DELETE", `Delete drug ${drug.name}`);
+
       return res.json({ message: "Drug is deleted" });
     } else {
       return res
@@ -132,6 +165,27 @@ app.post("/delete", async (req, res) => {
     return res.status(400).json({ error: error.message });
   }
 });
+
+app.get("/history", async (req, res) => {
+  const lastEvents = await TraceModel.find()
+    .limit(10)
+    .sort({ timeStamp: "descending" });
+  res.json(lastEvents);
+});
+
+const logEvent = (id, action, info) => {
+  var tsInMilli = new Date().getTime();
+  console.log(`${tsInMilli} : ${id} : ${action} : ${info}`);
+
+  const trace = new TraceModel({
+    timeStamp: tsInMilli,
+    drugId: id,
+    command: action,
+    changeInfo: info
+  });
+
+  trace.save();
+};
 
 // All others routes
 app.all("*", function(req, res) {
